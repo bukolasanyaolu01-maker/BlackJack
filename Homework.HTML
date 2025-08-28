@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack Game</title>
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #232526 0%, #414345 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(44, 62, 80, 0.15);
+            padding: 2.5rem 2rem;
+            max-width: 350px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        h1, h2 {
+            width: 100%;
+            text-align: center;
+        }
+        button {
+            background: #2dce98;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.7rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0.6rem 0.3rem;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(44, 62, 80, 0.08);
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+            display: inline-block;
+        }
+        button:hover {
+            background: #218c6e;
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 4px 16px rgba(44, 62, 80, 0.13);
+        }
+        .cards, .sum {
+            background: #f7f7f7;
+            border-radius: 6px;
+            padding: 0.5rem 0.8rem;
+            margin: 0.5rem 0 1rem 0;
+            font-size: 1rem;
+            color: #444;
+            box-shadow: 0 1px 4px rgba(44, 62, 80, 0.05);
+            min-width: 80px;
+            display: inline-block;
+            text-align: center;
+        }
+        .message {
+            margin: 1rem 0 0.5rem 0;
+            font-size: 1.1rem;
+            color: #2dce98;
+            min-height: 1.5em;
+        }
+        .button-row {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+        }
+        .reveal-row {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        @media (max-width: 500px) {
+            .container {
+                padding: 1.2rem 0.5rem;
+                max-width: 98vw;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .button-row {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Blackjack</h1>
+        <div class="message" id="message"></div>
+        <h2><b><i>Want to play a round?</i></b></h2>
+        <h2>Cards:</h2>
+        <div class="cards" id="cards"></div>
+        <h2>Sum:</h2>
+        <div class="sum" id="sum"></div>
+        <div class="button-row">
+            <button id="startBtn"><b>START GAME</b></button>
+            <button id="newCardBtn" disabled><b>NEW CARD</b></button>
+        </div>
+        <div class="reveal-row">
+            <button id="revealBtn" style="display:none;"><b>REVEAL CARDS</b></button>
+        </div>
+        <div class="reveal-row">
+            <button id="retryBtn" style="display:none;"><b>RETRY</b></button>
+            <p> Designed by Iremide</p>
+        </div>
+    </div>
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const newCardBtn = document.getElementById('newCardBtn');
+        const revealBtn = document.getElementById('revealBtn');
+        const retryBtn = document.getElementById('retryBtn');
+        const cardsDiv = document.getElementById('cards');
+        const sumDiv = document.getElementById('sum');
+        const messageDiv = document.getElementById('message');
+
+        let playerCards = [];
+        let playerSum = 0;
+        let gameActive = false;
+        let revealed = false;
+
+        function resetGame() {
+            playerCards = [];
+            playerSum = 0;
+            gameActive = false;
+            revealed = false;
+            cardsDiv.textContent = '';
+            sumDiv.textContent = '';
+            messageDiv.textContent = '';
+            newCardBtn.disabled = true;
+            revealBtn.style.display = 'none';
+            retryBtn.style.display = 'none';
+            startBtn.disabled = false;
+        }
+
+        function updateDisplay() {
+            cardsDiv.textContent = playerCards.join(', ');
+            sumDiv.textContent = playerSum || '';
+            if (playerCards.length > 0 && !revealed && playerSum <= 21) {
+                revealBtn.style.display = 'inline-block';
+            } else {
+                revealBtn.style.display = 'none';
+            }
+        }
+
+        function startGame() {
+            resetGame();
+            gameActive = true;
+            startBtn.disabled = true;
+            newCardBtn.disabled = false;
+            drawCard();
+            messageDiv.textContent = 'Game started! Draw cards or reveal.';
+        }
+
+        function drawCard() {
+            if (!gameActive) return;
+            const card = Math.floor(Math.random() * 13) + 1;
+            playerCards.push(card);
+            playerSum += card;
+            updateDisplay();
+            if (playerSum > 21) {
+                messageDiv.textContent = 'You went over 21! You lose. Press Retry to play again.';
+                newCardBtn.disabled = true;
+                revealBtn.style.display = 'none';
+                retryBtn.style.display = 'inline-block';
+                gameActive = false;
+            }
+        }
+
+        function revealCards() {
+            if (!gameActive || revealed) return;
+            revealed = true;
+            const dealerSum = Math.floor(Math.random() * 13) + 14; // 14-26
+            let resultMsg = `Dealer's cards: ${dealerSum}. `;
+            if (dealerSum > 21) {
+                resultMsg += 'Dealer busts! You win! 🎉';
+                messageDiv.style.color = '#2dce98';
+            } else if (dealerSum < playerSum) {
+                resultMsg += 'You win! 🎉';
+                messageDiv.style.color = '#2dce98';
+            } else {
+                resultMsg += 'You lose. 😢';
+                messageDiv.style.color = '#e74c3c';
+            }
+            messageDiv.textContent = resultMsg + ' Press Retry to play again.';
+            newCardBtn.disabled = true;
+            revealBtn.style.display = 'none';
+            retryBtn.style.display = 'inline-block';
+            gameActive = false;
+        }
+
+        startBtn.addEventListener('click', startGame);
+        newCardBtn.addEventListener('click', () => {
+            drawCard();
+            if (playerSum <= 21) {
+                messageDiv.textContent = 'Draw another card or reveal.';
+            }
+        });
+        revealBtn.addEventListener('click', revealCards);
+        retryBtn.addEventListener('click', resetGame);
+
+        // Initialize display
+        updateDisplay();
+    </script>
+
+
+</html></body></body>
+</html>
